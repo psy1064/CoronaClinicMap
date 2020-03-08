@@ -50,6 +50,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onMapReady(final GoogleMap googleMap) {
         mgoogleMap = googleMap;
 
+
         googleMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
             @Override
             public void onMapLoaded() {
@@ -66,7 +67,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
             MarkerOptions markerOptions = new MarkerOptions();
             markerOptions.position(latLng);
-            mgoogleMap.addMarker(markerOptions);
+            markerOptions.title(clinics.get(i).getName());
+            mgoogleMap.addMarker(markerOptions).showInfoWindow();
         }
 
         googleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
@@ -78,10 +80,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 AlertDialog.Builder builder = new AlertDialog.Builder(context);
                 builder.setTitle("병원정보");
                 builder.setMessage(
-                        "이름 : " + clinics.get(Integer.parseInt(marker_ID_number)).getName() +
-                        "\n주소 : " + clinics.get(Integer.parseInt(marker_ID_number)).getAddress() +
-                        "\n병원전화번호 : " + clinics.get(Integer.parseInt(marker_ID_number)).getPhoneNumber() +
-                        "\n검체채취가능여부 : " + clinics.get(Integer.parseInt(marker_ID_number)).getSample()
+                        "이름 : " + clinics.get(Integer.parseInt(marker_ID_number)-1).getName() +
+                        "\n주소 : " + clinics.get(Integer.parseInt(marker_ID_number)-1).getAddress() +
+                        "\n병원전화번호 : " + clinics.get(Integer.parseInt(marker_ID_number)-1).getPhoneNumber() +
+                        "\n검체채취가능여부 : " + clinics.get(Integer.parseInt(marker_ID_number)-1).getSample()
                         );
                 builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
                     @Override
