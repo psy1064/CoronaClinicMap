@@ -80,10 +80,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 AlertDialog.Builder builder = new AlertDialog.Builder(context);
                 builder.setTitle("병원정보");
                 builder.setMessage(
-                        "이름 : " + clinics.get(Integer.parseInt(marker_ID_number)-1).getName() +
-                        "\n주소 : " + clinics.get(Integer.parseInt(marker_ID_number)-1).getAddress() +
-                        "\n병원전화번호 : " + clinics.get(Integer.parseInt(marker_ID_number)-1).getPhoneNumber() +
-                        "\n검체채취가능여부 : " + clinics.get(Integer.parseInt(marker_ID_number)-1).getSample()
+                        "이름 : " + clinics.get(Integer.parseInt(marker_ID_number)).getName() +
+                        "\n주소 : " + clinics.get(Integer.parseInt(marker_ID_number)).getAddress() +
+                        "\n병원전화번호 : " + clinics.get(Integer.parseInt(marker_ID_number)).getPhoneNumber() +
+                        "\n검체채취가능여부 : " + clinics.get(Integer.parseInt(marker_ID_number)).getSample()
                         );
                 builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
                     @Override
