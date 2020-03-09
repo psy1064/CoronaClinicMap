@@ -66,4 +66,11 @@ public class Clinic implements Serializable {
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
     }
+
+    public String findIndex(String name) {
+        if(this.name.equals(name)) {
+            return number;
+        }
+        else return null;
+    }
 }
