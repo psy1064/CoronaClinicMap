@@ -22,6 +22,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.VisibleRegion;
+import com.google.maps.android.clustering.Cluster;
 import com.google.maps.android.clustering.ClusterManager;
 
 import java.util.ArrayList;
@@ -49,7 +50,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onMapReady(final GoogleMap googleMap) {
         mgoogleMap = googleMap;
-        clusterManager = new ClusterManager<>(this,mgoogleMap);
+        clusterManager = new ClusterManager<>(this, mgoogleMap);
 
         mgoogleMap.setOnCameraIdleListener(clusterManager);
         mgoogleMap.setOnMarkerClickListener(clusterManager);
@@ -58,18 +59,32 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onMapLoaded() {
                 Log.d(TAG, "Load");
-                LatLng latLng = new LatLng(37.5318247,126.8368475);
-                CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 15);
-                mgoogleMap.moveCamera(cameraUpdate);
+                LatLng latLng = new LatLng(37.5318247, 126.8368475);
+                CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 10);
+                mgoogleMap.animateCamera(cameraUpdate);
+
+                for(int i = 0 ; i < clinics.size(); i++) {
+                    MyItem clinicItem = new MyItem(clinic_address.get(i).getLatitude(), clinic_address.get(i).getLongitude(),
+                            clinics.get(i).getName());
+                    clusterManager.addItem(clinicItem);
+                } // 병원 개수만큼 item 추가
             }
         });
-
+        clusterManager.setOnClusterClickListener(new ClusterManager.OnClusterClickListener<MyItem>() {
+            @Override
+            public boolean onClusterClick(Cluster<MyItem> cluster) {
+                LatLng latLng = new LatLng(cluster.getPosition().latitude, cluster.getPosition().longitude);
+                CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 15);
+                mgoogleMap.moveCamera(cameraUpdate);
+                return false;
+            }
+        });
         mgoogleMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
             public void onInfoWindowClick(Marker marker) {
                 String marker_number = null;
-                for(int i = 0 ; i < clinics.size() ; i++ ) {
-                    if(clinics.get(i).findIndex(marker.getTitle()) != null) {
+                for (int i = 0; i < clinics.size(); i++) {
+                    if (clinics.get(i).findIndex(marker.getTitle()) != null) {
                         marker_number = clinics.get(i).findIndex(marker.getTitle());
                         Log.d(TAG, "marker_number " + marker_number);
                     }
@@ -80,10 +95,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 AlertDialog.Builder builder = new AlertDialog.Builder(context);
                 builder.setTitle("병원정보");
                 builder.setMessage(
-                        "이름 : " + clinics.get(marker_ID_number-1).getName() +
-                                "\n주소 : " + clinics.get(marker_ID_number-1).getAddress() +
-                                "\n병원전화번호 : " + clinics.get(marker_ID_number-1).getPhoneNumber() +
-                                "\n검체채취가능여부 : " + clinics.get(marker_ID_number-1).getSample()
+                        "이름 : " + clinics.get(marker_ID_number - 1).getName() +
+                                "\n주소 : " + clinics.get(marker_ID_number - 1).getAddress() +
+                                "\n병원전화번호 : " + clinics.get(marker_ID_number - 1).getPhoneNumber() +
+                                "\n검체채취가능여부 : " + clinics.get(marker_ID_number - 1).getSample()
                 );
                 builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
                     @Override
@@ -101,37 +116,5 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 alertDialog.show();
             }
         });// 마커 클릭 시 Alert Dialog가 나오도록 설정
-        mgoogleMap.setOnCameraMoveListener(new GoogleMap.OnCameraMoveListener() {
-            @Override
-            public void onCameraMove() {
-                VisibleRegion vr = mgoogleMap.getProjection().getVisibleRegion();
-                double left = vr.latLngBounds.southwest.longitude;
-                double top = vr.latLngBounds.northeast.latitude;
-                double right = vr.latLngBounds.northeast.longitude;
-                double bottom = vr.latLngBounds.southwest.latitude;
-                Log.d(TAG, "left = " + String.valueOf(left) +
-                                    "top = " + String.valueOf(top) +
-                                    "right = " + String.valueOf(right) +
-                                    "bottom = " + String.valueOf(bottom) + "\n");
-
-                clusterManager.clearItems();
-                findMarker(left, top, right, bottom);
-            }
-        });
-    } // 구글맵 사용
-
-    public void findMarker(double left, double top, double right, double bottom) {
-        int count = 0;
-        for(int i = 0; i < clinic_address.size(); i++) {
-            if(clinic_address.get(i).getLongitude() >= left && clinic_address.get(i).getLongitude() <= right) {
-                if(clinic_address.get(i).getLatitude() >=bottom && clinic_address.get(i).getLatitude() <= top) {
-                    Location location = clinic_address.get(i);
-                    MyItem clinicItem = new MyItem(location.getLatitude(), location.getLongitude(),
-                                clinics.get(i).getName());
-                    clusterManager.addItem(clinicItem);
-                }
-            }
-        }
-    } // 위도 경도 범위 안에
-
+    }
 }

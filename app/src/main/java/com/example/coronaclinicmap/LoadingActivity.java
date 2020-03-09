@@ -28,11 +28,6 @@ public class LoadingActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_loading);
         Log.d(TAG, "onCreate");
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
         ArrayList<Clinic> clinics = xml_parse();
         ArrayList<Location> clinic_address = new ArrayList<Location>();
         for(int i = 0 ; i < clinics.size(); i++) {
