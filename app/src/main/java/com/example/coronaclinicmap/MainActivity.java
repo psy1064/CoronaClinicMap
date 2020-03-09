@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onMapLoaded() {
                 Log.d(TAG, "Load");
-                LatLng latLng = new LatLng(37.5318247, 126.8368475);
+                LatLng latLng = new LatLng(37.564214, 127.001699);
                 CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 10);
                 mgoogleMap.animateCamera(cameraUpdate);
 

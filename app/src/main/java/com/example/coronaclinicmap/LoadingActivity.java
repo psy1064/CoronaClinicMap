@@ -8,6 +8,7 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -22,22 +23,29 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class LoadingActivity extends AppCompatActivity {
+    Context context = this;
     final String TAG = "LoadingActivity";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_loading);
         Log.d(TAG, "onCreate");
-        ArrayList<Clinic> clinics = xml_parse();
-        ArrayList<Location> clinic_address = new ArrayList<Location>();
-        for(int i = 0 ; i < clinics.size(); i++) {
-            Log.d(TAG, "convert");
-            clinic_address.add(addrToPoint(this, clinics.get(i).getAddress()));
-        } // 병원 주소만 위도경보로 변환하여 모아놓음
-        Intent intent = new Intent(LoadingActivity.this, MainActivity.class);
-        intent.putExtra("clinic", clinics);
-        intent.putExtra("clinic_addr", clinic_address);
-        startActivity(intent);
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                ArrayList<Clinic> clinics = xml_parse();
+                ArrayList<Location> clinic_address = new ArrayList<Location>();
+                for(int i = 0 ; i < clinics.size(); i++) {
+                    Log.d(TAG, "convert");
+                    clinic_address.add(addrToPoint(context, clinics.get(i).getAddress()));
+                } // 병원 주소만 위도경보로 변환하여 모아놓음
+                Intent intent = new Intent(LoadingActivity.this, MainActivity.class);
+                intent.putExtra("clinic", clinics);
+                intent.putExtra("clinic_addr", clinic_address);
+                startActivity(intent);
+            }
+        }).start();
     }
 
     private ArrayList<Clinic> xml_parse() {
