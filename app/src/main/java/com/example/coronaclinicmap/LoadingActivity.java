@@ -2,7 +2,11 @@ package com.example.coronaclinicmap;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
 import android.content.Intent;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -15,18 +19,29 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.List;
 
 public class LoadingActivity extends AppCompatActivity {
-    final String TAG = "Loading Activity";
+    final String TAG = "LoadingActivity";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_loading);
+        Log.d(TAG, "onCreate");
+    }
 
-        ArrayList<Clinic> arrayList = xml_parse();
-        Log.d(TAG, String.valueOf(arrayList.size()));
+    @Override
+    protected void onStart() {
+        super.onStart();
+        ArrayList<Clinic> clinics = xml_parse();
+        ArrayList<Location> clinic_address = new ArrayList<Location>();
+        for(int i = 0 ; i < clinics.size(); i++) {
+            Log.d(TAG, "convert");
+            clinic_address.add(addrToPoint(this, clinics.get(i).getAddress()));
+        } // 병원 주소만 위도경보로 변환하여 모아놓음
         Intent intent = new Intent(LoadingActivity.this, MainActivity.class);
-        intent.putExtra("clinic", arrayList);
+        intent.putExtra("clinic", clinics);
+        intent.putExtra("clinic_addr", clinic_address);
         startActivity(intent);
     }
 
@@ -112,4 +127,23 @@ public class LoadingActivity extends AppCompatActivity {
         }
         return clinicsList;
     }
+    public static Location addrToPoint(Context context, String addr) {
+        Location location = new Location("");
+        Geocoder geocoder = new Geocoder(context);
+        List<Address> addresses = null;
+
+        try {
+            addresses = geocoder.getFromLocationName(addr,3);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if(addresses != null) {
+            for(int i = 0 ; i < addresses.size() ; i++) {
+                Address lating = addresses.get(i);
+                location.setLatitude(lating.getLatitude());
+                location.setLongitude(lating.getLongitude());
+            }
+        }
+        return location;
+    } // 주소명으로 위도 경도를 구하는 메소드
 }

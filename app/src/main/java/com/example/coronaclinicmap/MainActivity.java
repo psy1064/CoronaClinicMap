@@ -1,42 +1,38 @@
 package com.example.coronaclinicmap;
 
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
-import android.graphics.Camera;
-import android.icu.lang.UScript;
-import android.location.Address;
-import android.location.Geocoder;
+import android.graphics.Color;
 import android.location.Location;
-import android.net.Uri;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.util.Log;
+import android.view.MotionEvent;
 
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.Lifecycle;
+
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.LocationSource;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.maps.android.clustering.ClusterItem;
+import com.google.android.gms.maps.model.VisibleRegion;
 import com.google.maps.android.clustering.ClusterManager;
 
-import java.io.IOException;
-import java.io.Serializable;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.List;
+
 
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
     private GoogleMap mgoogleMap;
     private ClusterManager<MyItem> clusterManager;
     ArrayList<Clinic> clinics;
+    ArrayList<Location> clinic_address;
     Context context = this;
     final String TAG = "LogMainActivity";
     @Override
@@ -45,6 +41,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         setContentView(R.layout.activity_main);
 
         clinics = (ArrayList<Clinic>)getIntent().getSerializableExtra("clinic");
+        clinic_address = (ArrayList<Location>)getIntent().getSerializableExtra("clinic_addr");
         SupportMapFragment supportMapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         supportMapFragment.getMapAsync(this);
     }
@@ -54,34 +51,20 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mgoogleMap = googleMap;
         clusterManager = new ClusterManager<>(this,mgoogleMap);
 
-     
-                Log.d(TAG, "Load");
-                LatLng latLng = new LatLng(addrToPoint(context, "서울시청").getLatitude(), addrToPoint(context, "서울시청").getLongitude());
-                mgoogleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-                mgoogleMap.animateCamera(CameraUpdateFactory.zoomTo(12));
-
-
         mgoogleMap.setOnCameraIdleListener(clusterManager);
         mgoogleMap.setOnMarkerClickListener(clusterManager);
 
-        clusterManager.setOnClusterItemClickListener(new ClusterManager.OnClusterItemClickListener<MyItem>() {
+        mgoogleMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
             @Override
-            public boolean onClusterItemClick(MyItem myItem) {
-                // mgoogleMap.moveCamera(CameraUpdateFactory.newLatLng(myItem.getPosition()));
-                mgoogleMap.animateCamera(CameraUpdateFactory.zoomIn());
-                return false;
+            public void onMapLoaded() {
+                Log.d(TAG, "Load");
+                LatLng latLng = new LatLng(37.5318247,126.8368475);
+                CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 15);
+                mgoogleMap.moveCamera(cameraUpdate);
             }
         });
 
-        for(int i = 0 ; i < clinics.size(); i++) {
-            Log.d(TAG, "marker " + String.valueOf(i));
-            Log.d(TAG, "clinics name = " + clinics.get(i).getName());
-            Location location = addrToPoint(context, clinics.get(i).getAddress());
-            MyItem clinicItem = new MyItem(location.getLatitude(), location.getLongitude(),
-                    clinics.get(i).getName());
-            clusterManager.addItem(clinicItem);
-        }
-        googleMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
+        mgoogleMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
             public void onInfoWindowClick(Marker marker) {
                 String marker_number = null;
@@ -90,7 +73,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         marker_number = clinics.get(i).findIndex(marker.getTitle());
                         Log.d(TAG, "marker_number " + marker_number);
                     }
-                }
+                } // marker title로 clinic을 검색하여 number 반환받아옴
                 final int marker_ID_number = Integer.parseInt(marker_number);
                 Log.d(TAG, "marker number = " + String.valueOf(marker_ID_number));
                 Log.d(TAG, "marker clinic name = " + clinics.get(marker_ID_number).getName());
@@ -118,25 +101,37 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 alertDialog.show();
             }
         });// 마커 클릭 시 Alert Dialog가 나오도록 설정
+        mgoogleMap.setOnCameraMoveListener(new GoogleMap.OnCameraMoveListener() {
+            @Override
+            public void onCameraMove() {
+                VisibleRegion vr = mgoogleMap.getProjection().getVisibleRegion();
+                double left = vr.latLngBounds.southwest.longitude;
+                double top = vr.latLngBounds.northeast.latitude;
+                double right = vr.latLngBounds.northeast.longitude;
+                double bottom = vr.latLngBounds.southwest.latitude;
+                Log.d(TAG, "left = " + String.valueOf(left) +
+                                    "top = " + String.valueOf(top) +
+                                    "right = " + String.valueOf(right) +
+                                    "bottom = " + String.valueOf(bottom) + "\n");
+
+                clusterManager.clearItems();
+                findMarker(left, top, right, bottom);
+            }
+        });
     } // 구글맵 사용
 
-    public static Location addrToPoint(Context context, String addr) {
-        Location location = new Location("");
-        Geocoder geocoder = new Geocoder(context);
-        List<Address> addresses = null;
-
-        try {
-            addresses = geocoder.getFromLocationName(addr,3);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        if(addresses != null) {
-            for(int i = 0 ; i < addresses.size() ; i++) {
-                Address lating = addresses.get(i);
-                location.setLatitude(lating.getLatitude());
-                location.setLongitude(lating.getLongitude());
+    public void findMarker(double left, double top, double right, double bottom) {
+        int count = 0;
+        for(int i = 0; i < clinic_address.size(); i++) {
+            if(clinic_address.get(i).getLongitude() >= left && clinic_address.get(i).getLongitude() <= right) {
+                if(clinic_address.get(i).getLatitude() >=bottom && clinic_address.get(i).getLatitude() <= top) {
+                    Location location = clinic_address.get(i);
+                    MyItem clinicItem = new MyItem(location.getLatitude(), location.getLongitude(),
+                                clinics.get(i).getName());
+                    clusterManager.addItem(clinicItem);
+                }
             }
         }
-        return location;
-    } // 주소명으로 위도 경도를 구하는 메소드
+    } // 위도 경도 범위 안에
+
 }
