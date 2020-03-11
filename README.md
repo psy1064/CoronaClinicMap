@@ -16,5 +16,5 @@
 6.  [안드로이드 스튜디오 구글 맵의 범위 안에만 마커 사용하기](https://1d1cblog.tistory.com/120)
 
 ## 어플 시연 사진
-
-[##_Image|kage@b3Fazo/btqCz6X6OPg/FKkVxZXyMhnr0XfZJQZNFK/img.jpg|undefined|data-origin-width="0.0" data-origin-height="0.0"|||_##][##_Image|kage@bgnYqj/btqCy5yEQ6x/ON0kORLDTyCboK9jKEI6Hk/img.jpg|undefined|data-origin-width="0.0" data-origin-height="0.0"|||_##]
+![app2](https://github.com/psy1064/CoronaClinicMap/blob/master/app_picture/app2.jpg?raw=true)
+![app1](https://github.com/psy1064/CoronaClinicMap/blob/master/app_picture/app1.jpg?raw=true)
